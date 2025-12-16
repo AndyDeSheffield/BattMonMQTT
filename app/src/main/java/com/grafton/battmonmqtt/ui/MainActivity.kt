@@ -1,5 +1,6 @@
 package com.grafton.battmonmqtt.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,28 +12,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.grafton.battmonmqtt.R
 import com.grafton.battmonmqtt.config.ConfigManager
 import com.grafton.battmonmqtt.config.MqttConfig
+import com.grafton.battmonmqtt.service.BatteryTelemetryService
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ConfigScreen(
-                onSave = { cfg ->
-                    ConfigManager.save(context = this, config = cfg)
-                }
-            )
+            ConfigScreen()
         }
     }
 }
 
 @Composable
-fun ConfigScreen(
-    onSave: (MqttConfig) -> Unit
-) {
+fun ConfigScreen() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var host by remember { mutableStateOf("") }
     var port by remember { mutableStateOf("1883") }
@@ -109,11 +109,37 @@ fun ConfigScreen(
                     password = password,
                     topic = topic
                 )
-                onSave(cfg)
+                scope.launch {
+                    ConfigManager.save(context, cfg)   // ✅ safe suspend call
+                }
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
             Text("Save Config")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Start Service Button
+        Button(
+            onClick = {
+                val intent = Intent(context, BatteryTelemetryService::class.java)
+                ContextCompat.startForegroundService(context, intent)
+            },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        ) {
+            Text("Start BatteryTelemetryService")
+        }
+
+        // Stop Service Button
+        Button(
+            onClick = {
+                val intent = Intent(context, BatteryTelemetryService::class.java)
+                context.stopService(intent)
+            },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        ) {
+            Text("Stop BatteryTelemetryService")
         }
     }
 }

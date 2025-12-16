@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 
@@ -59,8 +60,10 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.core:core:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
 
     // Jetpack Compose
     implementation("androidx.activity:activity-compose:1.9.0")
@@ -68,6 +71,10 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.3.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
 
+    // Proto DataStore (for custom Serializable types)
+    implementation("androidx.datastore:datastore:1.1.1")
+
     // HiveMQ MQTT client
     implementation("com.hivemq:hivemq-mqtt-client:1.3.0")
+
 }

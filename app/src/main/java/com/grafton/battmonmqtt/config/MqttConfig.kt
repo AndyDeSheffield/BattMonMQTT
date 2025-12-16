@@ -1,5 +1,8 @@
 package com.grafton.battmonmqtt.config
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class MqttConfig(
     val host: String,
     val port: Int,
