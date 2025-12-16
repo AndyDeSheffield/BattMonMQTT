@@ -1,0 +1,43 @@
+# Gradle files
+.gradle/
+build/
+!gradle-wrapper.jar
+
+# Local configuration
+local.properties
+
+# Log files
+*.log
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS-specific junk
+.DS_Store
+Thumbs.db
+
+# Generated files
+*.apk
+*.ap_
+*.dex
+*.class
+
+# Cache
+.cxx/
+captures/
+
+# Keystore files (keep them private!)
+*.jks
+*.keystore
+
+# NDK / CMake
+.obj/
+.externalNativeBuild/
+
+# Misc
+*.so
+
+*.hprof
