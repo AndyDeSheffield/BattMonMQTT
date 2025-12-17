@@ -81,41 +81,48 @@ class MqttManager(private val context: Context, private val config: MqttConfig) 
     fun publishDiscovery() {
         val baseTopic = getBaseTopic()
 
+        // Battery charge percentage
         publish(
             "homeassistant/sensor/${baseTopic}/charge/config",
             """
-            {
-              "name": "Battery Charge",
-              "state_topic": "${baseTopic}/charge",
-              "unit_of_measurement": "%",
-              "device_class": "battery"
-            }
-            """.trimIndent()
+        {
+          "name": "${baseTopic} Battery Charge",
+          "state_topic": "${baseTopic}/charge",
+          "object_id": "${baseTopic}.battery.charge",
+          "unit_of_measurement": "%",
+          "device_class": "battery",
+          "unique_id": "${baseTopic}_battery_charge"
+        }
+        """.trimIndent()
         )
 
+        // Battery temperature
         publish(
             "homeassistant/sensor/${baseTopic}/temperature/config",
             """
-            {
-              "name": "Battery Temperature",
-              "state_topic": "${baseTopic}/temperature",
-              "unit_of_measurement": "°C",
-              "device_class": "temperature"
-            }
-            """.trimIndent()
+        {
+          "name": "${baseTopic} Battery Temperature",
+          "state_topic": "${baseTopic}/temperature",
+          "object_id": "${baseTopic}.battery.temperature",
+          "unit_of_measurement": "°C",
+          "device_class": "temperature",
+          "unique_id": "${baseTopic}_battery_temperature"
+        }
+        """.trimIndent()
         )
 
+        // Battery status (multi-state string sensor)
         publish(
-            "homeassistant/binary_sensor/${baseTopic}/status/config",
+            "homeassistant/sensor/${baseTopic}/status/config",
             """
-            {
-              "name": "Battery Status",
-              "state_topic": "${baseTopic}/status",
-              "icon: "mdi:battery",
-              "payload_off": "discharging",
-              "device_class": "battery"
-            }
-            """.trimIndent()
+        {
+          "name": "${baseTopic} Battery Status",
+          "state_topic": "${baseTopic}/status",
+          "object_id": "${baseTopic}.battery.status",
+          "icon": "mdi:battery",
+          "unique_id": "${baseTopic}_battery_status"
+        }
+        """.trimIndent()
         )
     }
 

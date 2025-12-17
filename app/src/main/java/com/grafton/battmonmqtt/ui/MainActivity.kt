@@ -8,11 +8,14 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -50,6 +53,7 @@ fun getShortDeviceId(context: Context): String {
 fun ConfigScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
     var host by remember { mutableStateOf("") }
     var port by remember { mutableStateOf("1883") }
@@ -100,109 +104,119 @@ fun ConfigScreen() {
             host = it.host
             port = it.port.toString()
             username = it.username
-            password = it.password //"pj3NoqyHw2wzAOjj16xB!"//it.password
+            password = it.password
             topic = it.topic
-            // deviceId is generated, not loaded (but you could persist it if desired)
         }
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("MQTT Config Screen", style = MaterialTheme.typography.titleLarge)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                focusManager.clearFocus() // 👈 dismiss keyboard when tapping outside
+            }
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("MQTT Config Screen", style = MaterialTheme.typography.titleLarge)
 
-        OutlinedTextField(
-            value = host,
-            onValueChange = { host = it },
-            label = { Text("Host (IP)") },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-        )
-
-        OutlinedTextField(
-            value = port,
-            onValueChange = { port = it },
-            label = { Text("Port") },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-        )
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-        )
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation()
-        )
-
-        Row(modifier = Modifier.padding(top = 4.dp)) {
-            Checkbox(
-                checked = showPassword,
-                onCheckedChange = { showPassword = it }
+            OutlinedTextField(
+                value = host,
+                onValueChange = { host = it },
+                label = { Text("Host (IP)") },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             )
-            Text("Show password", modifier = Modifier.padding(start = 8.dp))
-        }
 
-        OutlinedTextField(
-            value = topic,
-            onValueChange = { topic = it },
-            label = { Text("Topic") },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-        )
+            OutlinedTextField(
+                value = port,
+                onValueChange = { port = it },
+                label = { Text("Port") },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
 
-        // Read-only Device ID field
-        OutlinedTextField(
-            value = deviceId,
-            onValueChange = {},
-            label = { Text("Device ID") },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            enabled = false
-        )
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
 
-        Button(
-            onClick = {
-                val cfg = MqttConfig(
-                    host = host,
-                    port = port.toIntOrNull() ?: 1883,
-                    username = username,
-                    password = password,
-                    topic = topic,
-                    deviceId = deviceId // save it in config
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation()
+            )
+
+            Row(modifier = Modifier.padding(top = 4.dp)) {
+                Checkbox(
+                    checked = showPassword,
+                    onCheckedChange = { showPassword = it }
                 )
-                scope.launch {
-                    ConfigManager.save(context, cfg)
-                }
-            },
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Save Config")
-        }
+                Text("Show password", modifier = Modifier.padding(start = 8.dp))
+            }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            OutlinedTextField(
+                value = topic,
+                onValueChange = { topic = it },
+                label = { Text("Topic") },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
 
-        Button(
-            onClick = {
-                val intent = Intent(context, BatteryTelemetryService::class.java)
-                ContextCompat.startForegroundService(context, intent)
-            },
-            enabled = !serviceRunning,
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-        ) {
-            Text("Start BatteryTelemetryService")
-        }
+            // Read-only Device ID field
+            OutlinedTextField(
+                value = deviceId,
+                onValueChange = {},
+                label = { Text("Device ID") },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                enabled = false
+            )
 
-        Button(
-            onClick = {
-                val intent = Intent(context, BatteryTelemetryService::class.java)
-                context.stopService(intent)
-            },
-            enabled = serviceRunning,
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-        ) {
-            Text("Stop BatteryTelemetryService")
+            Button(
+                onClick = {
+                    val cfg = MqttConfig(
+                        host = host,
+                        port = port.toIntOrNull() ?: 1883,
+                        username = username,
+                        password = password,
+                        topic = topic,
+                        deviceId = deviceId // save it in config
+                    )
+                    scope.launch {
+                        ConfigManager.save(context, cfg)
+                    }
+                },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Save Config")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    val intent = Intent(context, BatteryTelemetryService::class.java)
+                    ContextCompat.startForegroundService(context, intent)
+                },
+                enabled = !serviceRunning,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
+                Text("Start BatteryTelemetryService")
+            }
+
+            Button(
+                onClick = {
+                    val intent = Intent(context, BatteryTelemetryService::class.java)
+                    context.stopService(intent)
+                },
+                enabled = serviceRunning,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
+                Text("Stop BatteryTelemetryService")
+            }
         }
     }
 }
