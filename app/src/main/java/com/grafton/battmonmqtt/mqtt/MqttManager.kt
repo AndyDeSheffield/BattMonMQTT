@@ -18,9 +18,7 @@ class MqttManager(private val context: Context, private val config: MqttConfig) 
     @SuppressLint("HardwareIds")
     @Suppress("DEPRECATION")
     private fun getBaseTopic(): String {
-        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        val mac = wifiManager.connectionInfo.macAddress ?: "00:00:00:00:00:00"
-        return "Battery_${mac.lowercase().replace(":", "_")}"
+          return "Battery_${config.deviceId}"
     }
 
     fun connect() {

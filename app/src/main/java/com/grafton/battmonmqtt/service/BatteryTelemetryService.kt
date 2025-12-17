@@ -13,8 +13,14 @@ import kotlinx.coroutines.*
 
 class BatteryTelemetryService : Service() {
 
+    companion object {
+        const val ACTION_SERVICE_STARTED = "com.grafton.battmonmqtt.SERVICE_STARTED"
+        const val ACTION_SERVICE_STOPPED = "com.grafton.battmonmqtt.SERVICE_STOPPED"
+    }
+
     private var mqttManager: MqttManager? = null
     private var lastChargingState: Int? = null
+    private var discoveryPublished = false
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
@@ -34,7 +40,8 @@ class BatteryTelemetryService : Service() {
             .build()
 
         startForeground(1, notification)
-
+        // broadcast service started
+        sendBroadcast(Intent(ACTION_SERVICE_STARTED))
         publishTelemetry()
 
         return START_STICKY
@@ -45,6 +52,8 @@ class BatteryTelemetryService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel() // cancel coroutines when service stops
+        // Broadcast service stopped
+        sendBroadcast(Intent(ACTION_SERVICE_STOPPED))
     }
 
     private fun publishTelemetry() {
@@ -62,7 +71,11 @@ class BatteryTelemetryService : Service() {
                 }
 
                 if (manager.connected.get()) {
-                    manager.publishDiscovery()
+                    if (!discoveryPublished) {
+                        manager.publishDiscovery()
+                        discoveryPublished = true
+                    }
+
 
                     val bm = getSystemService(BATTERY_SERVICE) as BatteryManager
                     val pct = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
@@ -78,6 +91,7 @@ class BatteryTelemetryService : Service() {
 
                     delay(60_000)
                 } else {
+                    discoveryPublished = false
                     delay(600_000)
                 }
             }

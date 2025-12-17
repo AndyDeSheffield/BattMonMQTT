@@ -1,7 +1,11 @@
 package com.grafton.battmonmqtt.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -18,6 +22,7 @@ import com.grafton.battmonmqtt.config.ConfigManager
 import com.grafton.battmonmqtt.config.MqttConfig
 import com.grafton.battmonmqtt.service.BatteryTelemetryService
 import kotlinx.coroutines.launch
+import java.security.MessageDigest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +32,18 @@ class MainActivity : ComponentActivity() {
             ConfigScreen()
         }
     }
+}
+
+// Helper to generate a short hashed device ID from ANDROID_ID
+fun getShortDeviceId(context: Context): String {
+    val androidId = Settings.Secure.getString(
+        context.contentResolver,
+        Settings.Secure.ANDROID_ID
+    ) ?: "unknown"
+
+    val md = MessageDigest.getInstance("MD5")
+    val digest = md.digest(androidId.toByteArray())
+    return digest.joinToString("") { "%02x".format(it) }.take(8)
 }
 
 @Composable
@@ -41,6 +58,41 @@ fun ConfigScreen() {
     var topic by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
 
+    // Device ID (read-only)
+    val deviceId = remember { getShortDeviceId(context) }
+
+    // Track service running state
+    var serviceRunning by remember { mutableStateOf(false) }
+
+    // Broadcast receiver to update serviceRunning state
+    val receiver = remember {
+        object : BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    BatteryTelemetryService.ACTION_SERVICE_STARTED -> serviceRunning = true
+                    BatteryTelemetryService.ACTION_SERVICE_STOPPED -> serviceRunning = false
+                }
+            }
+        }
+    }
+
+    // Register/unregister receiver with lifecycle
+    DisposableEffect(Unit) {
+        val filter = IntentFilter().apply {
+            addAction(BatteryTelemetryService.ACTION_SERVICE_STARTED)
+            addAction(BatteryTelemetryService.ACTION_SERVICE_STOPPED)
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            context.registerReceiver(receiver, filter)
+        }
+        onDispose {
+            context.unregisterReceiver(receiver)
+        }
+    }
+
     // Load existing config once when the screen starts
     LaunchedEffect(Unit) {
         val existing = ConfigManager.load(context)
@@ -48,8 +100,9 @@ fun ConfigScreen() {
             host = it.host
             port = it.port.toString()
             username = it.username
-            password = it.password
+            password = it.password //"pj3NoqyHw2wzAOjj16xB!"//it.password
             topic = it.topic
+            // deviceId is generated, not loaded (but you could persist it if desired)
         }
     }
 
@@ -100,6 +153,15 @@ fun ConfigScreen() {
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
 
+        // Read-only Device ID field
+        OutlinedTextField(
+            value = deviceId,
+            onValueChange = {},
+            label = { Text("Device ID") },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            enabled = false
+        )
+
         Button(
             onClick = {
                 val cfg = MqttConfig(
@@ -107,10 +169,11 @@ fun ConfigScreen() {
                     port = port.toIntOrNull() ?: 1883,
                     username = username,
                     password = password,
-                    topic = topic
+                    topic = topic,
+                    deviceId = deviceId // save it in config
                 )
                 scope.launch {
-                    ConfigManager.save(context, cfg)   // ✅ safe suspend call
+                    ConfigManager.save(context, cfg)
                 }
             },
             modifier = Modifier.padding(top = 16.dp)
@@ -120,23 +183,23 @@ fun ConfigScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Start Service Button
         Button(
             onClick = {
                 val intent = Intent(context, BatteryTelemetryService::class.java)
                 ContextCompat.startForegroundService(context, intent)
             },
+            enabled = !serviceRunning,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         ) {
             Text("Start BatteryTelemetryService")
         }
 
-        // Stop Service Button
         Button(
             onClick = {
                 val intent = Intent(context, BatteryTelemetryService::class.java)
                 context.stopService(intent)
             },
+            enabled = serviceRunning,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         ) {
             Text("Stop BatteryTelemetryService")

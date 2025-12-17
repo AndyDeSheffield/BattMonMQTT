@@ -8,5 +8,8 @@ data class MqttConfig(
     val port: Int,
     val username: String,
     val password: String,
-    val topic: String
+    val topic: String,
+    val deviceId: String
 )
+
+

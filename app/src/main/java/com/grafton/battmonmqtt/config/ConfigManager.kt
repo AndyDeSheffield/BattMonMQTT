@@ -11,7 +11,7 @@ import java.io.OutputStream
 
 // Serializer for MqttConfig
 object MqttConfigSerializer : Serializer<MqttConfig> {
-    override val defaultValue: MqttConfig = MqttConfig("localhost", 1883, "", "", "battery/telemetry")
+    override val defaultValue: MqttConfig = MqttConfig("localhost", 1883, "", "", "battery/telemetry","ABCDEF")
 
     override suspend fun readFrom(input: InputStream): MqttConfig =
         try {
