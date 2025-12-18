@@ -1,3 +1,14 @@
+/**
+ * BatteryTelemetryService
+ *
+ * A foreground Android service that monitors the device's battery level,
+ * charging state, and temperature, then publishes this information to
+ * an MQTT broker. It also announces itself to Home Assistant via MQTT
+ * discovery so the battery data can be integrated into automations.
+ * Runs continuously in the background and sends updates either when
+ * values change or at regular intervals.
+ */
+
 package com.grafton.battmonmqtt.service
 
 import android.app.Service
@@ -10,6 +21,7 @@ import com.grafton.battmonmqtt.R
 import com.grafton.battmonmqtt.config.ConfigManager
 import com.grafton.battmonmqtt.mqtt.MqttManager
 import kotlinx.coroutines.*
+const val pingpublishdelay :Int = 60  //publish every 60 seconds regardless of power state changes
 
 class BatteryTelemetryService : Service() {
 
@@ -17,10 +29,10 @@ class BatteryTelemetryService : Service() {
         const val ACTION_SERVICE_STARTED = "com.grafton.battmonmqtt.SERVICE_STARTED"
         const val ACTION_SERVICE_STOPPED = "com.grafton.battmonmqtt.SERVICE_STOPPED"
     }
-
     private var mqttManager: MqttManager? = null
-    private var lastChargingState: Int? = null
+    private var lastChargingState: String? = null
     private var discoveryPublished = false
+    private var pingpublish :Int = pingpublishdelay
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
@@ -58,40 +70,50 @@ class BatteryTelemetryService : Service() {
 
     private fun publishTelemetry() {
         serviceScope.launch {
+            //wait for config file to load
             while (isActive) {
                 val manager = mqttManager
                 if (manager == null) {
                     delay(5_000)
                     continue
                 }
-
+                //try an connect if not connected
                 if (!manager.connected.get() && !manager.connecting.get()) {
                     manager.connect()
-                    delay(5_000)
+                    while (manager.connecting.get()) {
+                        delay(500)
+                    }
                 }
-
+                //publish discovery data if not published
                 if (manager.connected.get()) {
                     if (!discoveryPublished) {
                         manager.publishDiscovery()
                         discoveryPublished = true
                     }
 
-
+                    //get the battery status variables that we want
                     val bm = getSystemService(BATTERY_SERVICE) as BatteryManager
                     val pct = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-                    val charging = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS)
+                    val chargingstate = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS)
                     val temp = bm.getTemperature(this@BatteryTelemetryService)
-
-                    manager.publishTelemetry(pct, temp, charging)
-
-                    if (lastChargingState == null || lastChargingState != charging) {
-                        manager.publishTelemetry(pct, temp, charging)
-                        lastChargingState = charging
+                    val allstate= "%02d|%03d|%05.2f".format(pct, chargingstate, temp)
+                    //do a publish every <pingpublishdelay> seconds regardless of power state changes
+                    if (pingpublish <=0) {
+                        manager.publishTelemetry(pct, temp, chargingstate)
+                        pingpublish=pingpublishdelay
+                    }
+                    // do an immediate publish if something changes
+                    if (lastChargingState == null || lastChargingState != allstate) {
+                        manager.publishTelemetry(pct, temp, chargingstate)
+                        lastChargingState = allstate
+                        pingpublish=pingpublishdelay
                     }
 
-                    delay(60_000)
-                } else {
+                    delay(1000)
+                    pingpublish--
+                } else {  //If we cant connect wait a minute and try again
                     discoveryPublished = false
+                    pingpublish=pingpublishdelay
                     delay(600_000)
                 }
             }

@@ -1,3 +1,16 @@
+/**
+ * MainActivity
+ *
+ * The main configuration screen for the app, built with Jetpack Compose.
+ * It lets the user enter and save MQTT connection details (host, port,
+ * username, password, topic) and shows the device ID that will be used
+ * for telemetry. From here the user can start or stop the BatteryTelemetryService,
+ * with the UI updating automatically to reflect whether the service is running.
+ * This activity is the entry point of the app and provides a simple way
+ * to manage settings and control the background service.
+ */
+
+
 package com.grafton.battmonmqtt.ui
 
 import android.content.BroadcastReceiver

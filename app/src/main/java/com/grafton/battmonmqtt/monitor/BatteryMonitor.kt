@@ -1,3 +1,14 @@
+/**
+ * BatteryMonitor
+ *
+ * A simple helper class for reading battery information from the device.
+ * It provides a method to return the current battery state (level, charging,
+ * temperature, voltage) and a placeholder for registering a listener to react
+ * when the charge state changes. Acts as a lightweight wrapper around
+ * Android's BatteryManager and related broadcasts.
+ */
+
+
 package com.grafton.battmonmqtt.monitor
 import android.content.Context
 class BatteryMonitor(private val context: Context) {

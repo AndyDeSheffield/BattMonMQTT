@@ -6,6 +6,10 @@ plugins {
 
 
 android {
+    lint { disable += setOf("ExpiredTargetSdkVersion")
+        abortOnError = false // 👈 allows build to continue even if other issues exist
+         }
+
     namespace = "com.grafton.battmonmqtt"
     compileSdk = 35
 
@@ -15,6 +19,7 @@ android {
         targetSdk = 30       // Fire OS 8 baseline (Android 11)
         versionCode = 1
         versionName = "1.0"
+        setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
     }
 
     buildTypes {

@@ -1,3 +1,14 @@
+/**
+ * ConfigManager
+ *
+ * Provides simple load and save functions for the app's MQTT configuration.
+ * It uses Android's DataStore with a custom serializer to persist settings
+ * like host, port, username, password, topic, and device ID in a JSON file.
+ * This ensures the user's MQTT details are remembered between app launches
+ * and can be easily retrieved by the service or UI when needed.
+ */
+
+
 package com.grafton.battmonmqtt.config
 
 import android.content.Context

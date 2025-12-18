@@ -1,3 +1,13 @@
+/**
+ * App
+ *
+ * The custom Application class for BattMonMQTT. It runs once when the app starts
+ * and is responsible for setting up global resources. In particular, it creates
+ * the notification channel used by BatteryTelemetryService so the service can
+ * run in the foreground and show status notifications. This ensures the service
+ * has the proper system support right from app launch.
+ */
+
 package com.grafton.battmonmqtt
 
 import android.app.Application

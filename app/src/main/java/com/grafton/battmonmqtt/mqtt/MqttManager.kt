@@ -1,3 +1,14 @@
+/**
+ * MqttManager
+ *
+ * Handles all MQTT communication for the app. It manages connecting to the broker,
+ * tracking connection state, and publishing messages. This includes sending battery
+ * telemetry values (charge, temperature, status) and publishing Home Assistant
+ * discovery data so the sensors appear automatically. Acts as the bridge between
+ * the Android service and the MQTT broker.
+ */
+
+
 package com.grafton.battmonmqtt.mqtt
 
 import android.annotation.SuppressLint

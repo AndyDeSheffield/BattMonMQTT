@@ -3,8 +3,11 @@
     package="com.grafton.battmonmqtt">
 
     <!-- Permissions -->
+    <!-- Allow running as a foreground service so telemetry can keep publishing -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Allow the app to be notified when the device finishes booting -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Needed for MQTT communication with the broker -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -27,6 +30,7 @@
         </activity>
 
         <!-- Foreground Service -->
+        <!-- Runs BatteryTelemetryService in the background to publish battery data over MQTT -->
         <service
             android:name=".service.BatteryTelemetryService"
             android:enabled="true"
@@ -34,6 +38,7 @@
             android:foregroundServiceType="connectedDevice|dataSync" />
 
         <!-- Boot Receiver -->
+        <!-- Starts BatteryTelemetryService automatically after the device boots -->
         <receiver
             android:name=".receiver.BootReceiver"
             android:enabled="true"
