@@ -1,17 +1,17 @@
+AI generated text
 # BattMonMQTT
 
 Battery telemetry foreground service for Android, publishing via MQTT.
 
 ## Features
 - Foreground service with persistent MQTT connection
-- Publishes battery level + temperature every 2 minutes
-- Publishes charge/discharge status within 5 seconds of change
+- Publishes battery level + temperature every change and every minute
 - Configurable broker settings via Jetpack Compose UI
 - Auto-start on boot
 
 ## Requirements
 - Android Studio (Windows)
-- Amazon Fire tablet with USB debugging enabled
+- Amazon Fire tablet (others not tested) with ADB debugging enabled for sideloading
 - HiveMQ MQTT client library
 - Jetpack Compose + DataStore
 
