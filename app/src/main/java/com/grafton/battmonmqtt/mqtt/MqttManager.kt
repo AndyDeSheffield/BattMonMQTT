@@ -93,13 +93,14 @@ class MqttManager(private val context: Context, private val config: MqttConfig) 
         val baseTopic = getBaseTopic()
 
         // Battery charge percentage
+        // was "object_id": "${baseTopic}.battery.charge",
         publish(
             "homeassistant/sensor/${baseTopic}/charge/config",
             """
         {
           "name": "${baseTopic} Battery Charge",
           "state_topic": "${baseTopic}/charge",
-          "object_id": "${baseTopic}.battery.charge",
+          "default_entity_id": "sensor.${baseTopic}.battery.charge",
           "unit_of_measurement": "%",
           "device_class": "battery",
           "unique_id": "${baseTopic}_battery_charge"
@@ -108,13 +109,14 @@ class MqttManager(private val context: Context, private val config: MqttConfig) 
         )
 
         // Battery temperature
+        // was "object_id": "${baseTopic}.battery.temperature"
         publish(
             "homeassistant/sensor/${baseTopic}/temperature/config",
             """
         {
           "name": "${baseTopic} Battery Temperature",
           "state_topic": "${baseTopic}/temperature",
-          "object_id": "${baseTopic}.battery.temperature",
+          "default_entity_id": "sensor.${baseTopic}.battery.temperature",
           "unit_of_measurement": "°C",
           "device_class": "temperature",
           "unique_id": "${baseTopic}_battery_temperature"
@@ -123,13 +125,14 @@ class MqttManager(private val context: Context, private val config: MqttConfig) 
         )
 
         // Battery status (multi-state string sensor)
+        //was "object_id": "${baseTopic}.battery.status",
         publish(
             "homeassistant/sensor/${baseTopic}/status/config",
             """
         {
           "name": "${baseTopic} Battery Status",
           "state_topic": "${baseTopic}/status",
-          "object_id": "${baseTopic}.battery.status",
+          "default_entity_id": "sensor.${baseTopic}.battery.status",
           "icon": "mdi:battery",
           "unique_id": "${baseTopic}_battery_status"
         }

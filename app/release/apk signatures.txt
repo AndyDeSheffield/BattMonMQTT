@@ -1,0 +1,9 @@
+[Not Trusted] This com.grafton.battmonmqtt-v1(1.0)-release.apk APK is a modified version, we don't recommend installing it.
+
+Package Name : com.grafton.battmonmqtt
+
+Signature : 35cdc255eea52f87372b8ba2a2407668775e93cb
+
+File SHA1 : ad1ce2a46c11861b103abce639ab6f129db9041e
+
+File Size : 27.1 MB
